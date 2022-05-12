@@ -14,16 +14,21 @@ from third_party.LIFE.core.utils.utils import image_flow_warp
 from decompose_to_yml import decompose_to_yml
 DEBUG = True
 
-def rgb_to_srgb(img):
-    dst = []
-    magic_number = 0.0031308
-    for row in img:        
-        dst_row = []
-        for pix in row:
-            pix = [x*12.92 if x<=magic_number else math.pow(1.055*x, 1.0/2.4)-0.055 for x in pix]
-            dst_row.append(pix)
-        dst.append(dst_row)
-    return np.asarray(dst)
+def srgb_to_rgb(srgb):
+    ret = np.zeros_like(srgb)
+    idx0 = srgb <= 0.04045
+    idx1 = srgb > 0.04045
+    ret[idx0] = srgb[idx0] / 12.92
+    ret[idx1] = np.power((srgb[idx1] + 0.055) / 1.055, 2.4)
+    return ret
+
+def rgb_to_srgb(rgb):
+    ret = np.zeros_like(rgb)
+    idx0 = rgb <= 0.0031308
+    idx1 = rgb > 0.0031308
+    ret[idx0] = rgb[idx0] * 12.92
+    ret[idx1] = np.power(1.055 * rgb[idx1], 1.0 / 2.4) - 0.055
+    return ret
 
 def alpha_image_editing(target_path:str,
                         scene_yml_path:str,

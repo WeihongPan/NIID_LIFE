@@ -34,6 +34,9 @@ def rgb_to_srgb(rgb):
     ret[idx0] = rgb[idx0] * 12.92
     ret[idx1] = np.power(1.055 * rgb[idx1], 1.0 / 2.4) - 0.055
     return ret
+
+
+
 def image_editing(target_path: str, 
                   scene_yml_path:str, 
                   ssrc_path:str,
@@ -42,18 +45,22 @@ def image_editing(target_path: str,
     W, H = 480, 640
 
     target = cv2.imread(target_path, cv2.IMREAD_UNCHANGED) #bgr    
+    starget = cv2.resize(target, (W, H))
+    '''
     target = np.float64(target)
     target = target / 255.0
     starget = rgb_to_srgb(target)
     starget = (starget*255.0).astype(np.uint8)
     starget = cv2.resize(starget, (W, H))
+    '''
+    
 
     ssrc = cv2.imread(ssrc_path, cv2.IMREAD_UNCHANGED) #bgr
     if not ssrc.shape[2] == 3:        
         raise ValueError("replace image should have 3 channels")
-    src = ssrc
-    src = cv2.resize(src, (W, H))
-    #src_alpha = cv2.resize(src_alpha, (W, H))
+    #src = rgb_to_srgb(ssrc.astype(np.float64)/255.0)
+    #src = cv2.resize((ssrc*255.0).astype(np.uint8), (W, H))
+    src = cv2.resize(ssrc, (W, H))
 
     ## Load model
     args = get_life_args()
@@ -70,8 +77,10 @@ def image_editing(target_path: str,
     dst = ifs.getNode("rgb").mat()
     dst = np.float64(dst)        
     dst = dst[:,:,::-1] #rgb to bgr  
-    sdst = rgb_to_srgb(dst)    
-    sdst = (sdst*255.0).astype(np.uint8)        
+    sdst = (dst*255.0).astype(np.uint8)
+    #sdst = rgb_to_srgb(dst)    
+    #sdst = (sdst*255.0).astype(np.uint8)   
+    sdst = cv2.resize(sdst, (W, H))     
 
     '''
     cv2.imshow("target", starget)
@@ -84,7 +93,7 @@ def image_editing(target_path: str,
     #step2: find flow target -> scene
     ## resize images       
     ori_H, ori_W = dst.shape[:2]
-    sdst = cv2.resize(sdst, (W, H))
+    
             
     ## estimate
     cv2.imwrite("scene_show.jpg", sdst)
@@ -124,7 +133,7 @@ def image_editing(target_path: str,
     split(scene_yml_path, data_root)
     prefix=os.path.split(scene_yml_path)[1][:-4]
     #print('prefix: ', prefix)
-    sdst = render(1/5, data_root, prefix)
+    sdst = render(1/2.5, data_root, prefix)
         
     return sdst 
 

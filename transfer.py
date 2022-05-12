@@ -47,6 +47,7 @@ def transfer_single(data_root, name):
 
     input_srgb = t['input_srgb']
     rgb = srgb_to_rgb(input_srgb)        
+    #rgb = input_srgb
 
     pred_S = t['pred_S']
 

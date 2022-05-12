@@ -62,7 +62,7 @@ if __name__ == '__main__':
     args.add_argument('--exp_dir', type=str, default='./data/exp7')
     args.add_argument('--scene_name', type=str, default='scene.jpg')    
     args.add_argument('--target_name', type=str, default='fantastic_beast.jpg')
-    args.add_argument('--source_name', type=str, default='sonic.jpg')
+    args.add_argument('--source_name', type=str, default='fantastic_beast.jpg')
     parser = args.parse_args()
 
     alpha = False     
