@@ -3,7 +3,7 @@ import enum
 import os 
 os.environ["OMP_NUM_THREADS"]="1"
 os.environ["MKL_NUM_THREADS"]="1"
-os.environ["CUDA_VISIBLE_DEVICES"]="5"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import sys
 sys.path.append('./third_party/NIID')
 sys.path.append('./third_party/LIFE')
@@ -14,17 +14,30 @@ from edit_alpha_poster_demo import alpha_image_editing
 from edit_poster import image_editing
 import cv2
 from tempfile import TemporaryDirectory
+from PIL import Image, ImageOps
 
 import argparse
 
 def resize_rewrite(img_path):
     frame = cv2.imread(img_path)
     if frame.shape[0] > frame.shape[1]: # H > W
-        frame = cv2.resize(frame, (480, 640))     #size = (W, H)
+        frame = cv2.resize(frame, (480, 640), cv2.INTER_LANCZOS4)     #size = (W, H)
     else: # H <= W
-        frame = cv2.resize(frame, (640, 480))     #size = (W, H)               
+        frame = cv2.resize(frame, (640, 480), cv2.INTER_LANCZOS4)     #size = (W, H)               
     resize_name = '%s_resize.jpg' % (img_path[:img_path.rfind('.')])
     cv2.imwrite(resize_name, frame)
+    return resize_name
+
+def resize_rewrite_PIL(img_path):
+    frame = Image.open(img_path)
+    frame = ImageOps.exif_transpose(frame)
+    if frame.size[1] > frame.size[0]: # H > W Image.size => (W, H)
+        frame = frame.resize((480, 640), Image.ANTIALIAS)     #size = (W, H)
+    else: # H <= W
+        frame = frame.resize((640, 480), Image.ANTIALIAS)     #size = (W, H)               
+    resize_name = '%s_resize.jpg' % (img_path[:img_path.rfind('.')])
+    quality_val = 90
+    frame.save(resize_name, 'JPEG', quality=quality_val)
     return resize_name
     
 
@@ -35,12 +48,13 @@ def process_image(exp_dir, scene_name, target_name, source_name, alpha=False):
     target_path = os.path.join(data_root, target_name)
     src_path = os.path.join(data_root, source_name)         
     if not (os.path.exists(scene_path) and os.path.exists(target_path) and os.path.exists(src_path)):
-        raise FileNotFoundError()    
+        raise FileNotFoundError() 
 
     
-    scene_path = resize_rewrite(scene_path)        
-    target_path = resize_rewrite(target_path)
-    src_path = resize_rewrite(src_path)
+    scene_path = resize_rewrite_PIL(scene_path)        
+    target_path = resize_rewrite_PIL(target_path)
+    src_path = resize_rewrite_PIL(src_path)
+    
     
     scene_name = os.path.split(scene_path)[-1]
     print('scene: '+scene_path)
@@ -62,7 +76,7 @@ if __name__ == '__main__':
     args.add_argument('--exp_dir', type=str, default='./data/exp7')
     args.add_argument('--scene_name', type=str, default='scene.jpg')    
     args.add_argument('--target_name', type=str, default='fantastic_beast.jpg')
-    args.add_argument('--source_name', type=str, default='fantastic_beast.jpg')
+    args.add_argument('--source_name', type=str, default='sonic.jpg')
     parser = args.parse_args()
 
     alpha = False     

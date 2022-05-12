@@ -103,8 +103,13 @@ def image_editing(target_path: str,
     out = image_flow_warp(src, flow[0].permute([1,2,0]))
     #out_alpha = image_flow_warp(src_alpha[:,:,np.newaxis], flow[0].permute([1,2,0]))
     
-    intensity = np.linalg.norm(out, axis=2)
-    mask = (intensity == 0)[:,:,np.newaxis]      
+    #intensity = np.linalg.norm(out, axis=2)
+    #mask = (intensity == 0)[:,:,np.newaxis]
+    mask_origin = np.ones(shape=(src.shape[0], src.shape[1], 1))    
+    mask_origin = image_flow_warp(mask_origin, flow[0].permute([1,2,0]),padding_mode='zeros')
+    mask = 1 - mask_origin
+    #mask = 1-mask_origin
+    #mask = np.logical_and(mask, mask_origin)
     result = (out*(1-mask) + sdst*mask).astype(np.uint8)
     result = cv2.resize(result, (ori_W, ori_H))
     #result = srgb_to_rgb(result)
